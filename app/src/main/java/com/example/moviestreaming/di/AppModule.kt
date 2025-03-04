@@ -15,7 +15,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
     private const val BASE_URL = "https://phimapi.com/"
-
     @Provides
     @Singleton
     fun provideMovieApi() : MovieService {

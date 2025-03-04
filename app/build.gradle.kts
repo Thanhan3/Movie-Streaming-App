@@ -1,9 +1,13 @@
+import java.util.Properties
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -18,10 +22,18 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"https://www.omdbapi.com/\"")
+            buildConfigField("String", "BASE_URL_IMG", "\"https://phimimg.com/\"")
+        }
         release {
+            buildConfigField("String", "BASE_URL", "\"https://www.omdbapi.com/\"")
+            buildConfigField("String", "BASE_URL_IMG", "\"https://phimimg.com/\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -38,16 +50,23 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
-    implementation( "androidx.media3:media3-exoplayer-hls:1.2.0")
-    implementation("androidx.media3:media3-exoplayer:1.5.1")
-    implementation("androidx.media3:media3-exoplayer-dash:1.5.1")
-    implementation("androidx.media3:media3-ui:1.5.1")
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.media3.exoplayer.hls.v151)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.exoplayer.dash)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.material)
+    implementation(libs.coil.compose)
+    implementation(libs.glide)
     implementation(libs.hilt.android)
     implementation(libs.androidx.annotation)
+    implementation(libs.material)
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.retrofit)
