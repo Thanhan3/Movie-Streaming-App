@@ -11,13 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.FabPosition.Companion.Center
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -102,8 +97,8 @@ fun MainScreen(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.matchParentSize()
             )
+            MainContent(onItemClick, movies ,onSearch,isSearch)
         }
-        MainContent(onItemClick, movies ,onSearch,isSearch)
     }
 }
 
@@ -111,21 +106,34 @@ fun MainScreen(
 fun MainContent(
     onItemClick: (Item) -> Unit,
     movies: List<Item> = emptyList(),
-    onSearch:(String) -> Unit,
-    isSearch : Boolean = false
+    onSearch: (String) -> Unit,
+    isSearch: Boolean = false
 ) {
-
     var showNewMoviesLoad by remember { mutableStateOf(true) }
+    var showNoMoviesFound by remember { mutableStateOf(false) }
 
-
+    // Cập nhật loading cho danh sách phim mới
     LaunchedEffect(movies) {
         showNewMoviesLoad = movies.isEmpty()
+    }
+
+    // Khi đang search, nếu sau 5 giây danh sách vẫn rỗng thì hiển thị thông báo
+    LaunchedEffect(isSearch, movies) {
+        if (isSearch && movies.isEmpty()) {
+            kotlinx.coroutines.delay(5000L)
+            // Nếu sau 5 giây vẫn chưa có phim nào được load thì hiển thị thông báo
+            if (movies.isEmpty()) {
+                showNoMoviesFound = true
+            }
+        } else {
+            showNoMoviesFound = false
+        }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 40.dp, bottom = 100.dp)
+            .padding(top = 40.dp)
     ) {
         Text(
             text = "What would you like to watch?",
@@ -136,42 +144,78 @@ fun MainContent(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(bottom = 16.dp)
-
         )
+
         SearchBar(
             hint = "Search Movies...",
-            onSearch
+            onSearch = onSearch
         )
-        if(isSearch){
+
+        if (isSearch) {
             SectionTitle(title = "Search Results")
-        }else{
+        } else {
             SectionTitle(title = "New Movies")
         }
-        if (showNewMoviesLoad) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+
+        // Nếu danh sách phim rỗng
+        if (movies.isEmpty()) {
+            if (isSearch) {
+                if (showNoMoviesFound) {
+                    // Sau 5 giây mà vẫn không có phim: hiển thị thông báo
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No movies found",
+                            style = TextStyle(
+                                color = Color.White,
+                                fontSize = 16.sp
+                            )
+                        )
+                    }
+                } else {
+                    // Trong quá trình chờ kết quả tìm kiếm: hiển thị CircularProgressIndicator
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            } else {
+                // Nếu không ở chế độ search (New Movies)
+                if (showNewMoviesLoad) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
         } else {
+            // Nếu danh sách phim không rỗng, hiển thị grid
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
-                items(movies.size) { item ->
+                items(movies.size) { index ->
                     FilmItem(
-                        item = movies[item],
+                        item = movies[index],
                         onItemClick = onItemClick,
-                        isSearch
+                        isSearch = isSearch
                     )
                 }
             }
         }
-
     }
 }
 

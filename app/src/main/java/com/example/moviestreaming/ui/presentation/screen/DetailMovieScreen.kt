@@ -1,6 +1,7 @@
 package com.example.moviestreaming.ui.presentation.screen
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,10 +44,14 @@ import com.example.moviestreaming.R
 import com.example.moviestreaming.data.detail.MovieDetail
 
 @Composable
-fun DetailScreen(filmItem: MovieDetail, onBackClick: () -> Unit) {
+fun DetailScreen(
+    filmItem: MovieDetail,
+    onBackClick: () -> Unit,
+    onPlayClick:  (String) -> Unit
+) {
     val scrollState = rememberScrollState()
     val isLoading = remember { mutableStateOf(false) }
-    val episode = filmItem.episodes[1].server_data
+    val episode = filmItem.episodes[0].server_data
     Log.d("episode", "DetailScreen: $episode")
     Box(
         modifier = Modifier
@@ -211,10 +216,11 @@ fun DetailScreen(filmItem: MovieDetail, onBackClick: () -> Unit) {
                             Card(
                                 modifier = Modifier
                                     .padding(8.dp)
-                                    .fillMaxWidth(),
+                                    .fillMaxWidth()
+                                    .clickable { onPlayClick(episode[it].link_m3u8) },
                                 shape = RoundedCornerShape(8.dp),
                                 elevation = 4.dp,
-                                backgroundColor = Color(0xFF1F1F1F) // Màu nền cho Card
+                                backgroundColor = Color(0xFF1F1F1F)// Màu nền cho Card
                             ) {
                                 Column(
                                     modifier = Modifier

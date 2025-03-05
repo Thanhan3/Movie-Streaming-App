@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -18,9 +19,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.moviestreaming.MovieViewModel
+import com.example.moviestreaming.PlayerViewModel
 import com.example.moviestreaming.R
 import com.example.moviestreaming.ui.presentation.screen.DetailScreen
 import com.example.moviestreaming.ui.presentation.screen.MainScreen
+import com.example.moviestreaming.ui.presentation.screen.PlayVideoComponent
 
 
 @Composable
@@ -43,7 +46,7 @@ fun NavGraphSetup(
                 onItemClick = {
                     navController.navigate(Routes.DetailScreen(slug = it.slug))
                 },
-                movies = if (isSearch) searchMovies?.data?.items?:emptyList() else movies,
+                movies = if (isSearch) searchMovies?.data?.items ?: emptyList() else movies,
                 onSearch = { query ->
                     mainViewModel.searchMovies(query)
                     mainViewModel.setQuery(query)
@@ -58,25 +61,36 @@ fun NavGraphSetup(
                 mainViewModel.getMovie(slug)
             }
             val movie by mainViewModel.movie.collectAsState()
+            val localContext = LocalContext.current
+            fun onPlayClick(url: String) {
+                navController.navigate(Routes.PlayerScreen(url))
+            }
             if (movie == null) {
                 Box(
-                    modifier= Modifier
+                    modifier = Modifier
                         .fillMaxSize()
                         .background(color = colorResource(R.color.blackBackground)),
                     contentAlignment = Alignment.Center,
-                ){
+                ) {
                     CircularProgressIndicator()
                 }
-            }else{
+            } else {
                 movie?.let {
                     DetailScreen(
                         filmItem = it,
                         onBackClick = {
                             navController.popBackStack()
+                        },
+                        onPlayClick = {
+                            onPlayClick(it)
                         }
                     )
                 }
             }
+        }
+        composable<Routes.PlayerScreen> {
+            val url = it.toRoute<Routes.PlayerScreen>().url
+            PlayVideoComponent(url)
         }
 
     }
